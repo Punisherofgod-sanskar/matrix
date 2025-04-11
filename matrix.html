@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix Algorithms</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="overlay fade-in">
+        <h1>Matrix Algorithms</h1>
+
+        <button class="collapsible">Standard Multiplication</button>
+        <div class="content">
+            <p>Triple nested loop. Simple, but O(n³) time.</p>
+        </div>
+
+        <button class="collapsible">Strassen's Algorithm</button>
+        <div class="content">
+            <p>Reduces time complexity to ~O(n².81) using matrix partitioning.</p>
+        </div>
+
+        <button class="collapsible">Winograd's Variant</button>
+        <div class="content">
+            <p>Optimizes Strassen by reducing additions/multiplications.</p>
+        </div>
+
+        <button class="collapsible">Compare</button>
+        <div class="content">
+            <p>Let's compare the performances of these algorithms.</p>
+            <div style="text-align: center;">
+                <a href="compare.html" class="action-button">Go</a>
+            </div>
+            <br>
+            <br>
+        </div>
+
+        <button class="collapsible">Applications</button>
+        <div class="content">
+            <p>Used in cryptography, computer graphics, simulations, ML.</p>
+        </div>
+
+        <a href="index.html" class="action-button">Back</a>
+    </div>
+
+    <script>
+    const collapsibles = document.querySelectorAll(".collapsible");
+    collapsibles.forEach(btn => {
+      btn.addEventListener("click", function () {
+        this.classList.toggle("active");
+        const content = this.nextElementSibling;
+        if (content.style.maxHeight) {
+          content.style.maxHeight = null;
+        } else {
+          content.style.maxHeight = content.scrollHeight + "px";
+        }
+      });
+    });
+    </script>
+</body>
+</html>

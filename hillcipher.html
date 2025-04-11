@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hill Cipher</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="overlay fade-in">
+        <h1>Hill Cipher</h1>
+
+        <form action="/cgi-bin/hillcipher.cgi" method="post">
+            <input type="text" name="text" class="styled-input" placeholder="Enter message (only letters)" required />
+
+            <input type="text" name="matrix" class="styled-input" placeholder="Matrix row-wise (e.g., 3 3 2 5)" required />
+
+            <input type="text" name="size" class="styled-input" placeholder="Matrix size (e.g., 2 or 3)" required />
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <input type="submit" name="action" value="Encrypt" class="action-button" />
+                <input type="submit" name="action" value="Decrypt" class="action-button" />
+            </div>
+        </form>
+
+        <br />
+        <a href="index.html" class="action-button">Back</a>
+    </div>
+</body>
+</html>

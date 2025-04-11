@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+	font-family: 'Inter', sans-serif;
+	margin: 0;
+	padding: 0;
+	background: url('matrix-background.jpg') center/cover fixed no-repeat;
+	color: #e8f0ff;
+}
+
+.overlay {
+	background-color: rgba(0, 0, 0, 0.6);
+	min-height: 100vh;
+	padding: 3rem 2rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Fade-in animation */
+.fade-in {
+	opacity: 0;
+	animation: fadeIn 1s ease-in forwards;
+}
+
+@keyframes fadeIn {
+	to {
+		opacity: 1;
+	}
+}
+
+h1 {
+	font-size: 2.2rem;
+	color: #ffffff;
+	text-shadow: 1px 1px 3px #000;
+	margin-bottom: 1rem;
+}
+
+p {
+	font-size: 1rem;
+	color: #cfdfff;
+	max-width: 600px;
+	text-align: center;
+	margin-bottom: 2rem;
+}
+
+.action-button {
+	background: #1565c0;
+	color: white;
+	padding: 0.6rem 1.4rem;
+	border: none;
+	border-radius: 8px;
+	font-weight: 500;
+	font-size: 1rem;
+	text-decoration: none;
+	transition: background 0.3s ease;
+}
+
+	.action-button:hover {
+		background: #1a4f9c;
+		cursor: pointer;
+	}
+
+/* Hyperlink reset */
+a {
+	color: #b3d4ff;
+	text-decoration: none;
+}
+
+	a:hover {
+		text-decoration: none;
+		color: #76cadb;
+	}
+
+/* Collapsible UI */
+.collapsible {
+	background-color: rgba(255, 255, 255, 0.05);
+	color: #f0f4ff;
+	cursor: pointer;
+	padding: 0.7rem 1rem;
+	width: 100%;
+	text-align: left;
+	border: none;
+	outline: none;
+	font-size: 1rem;
+	border-radius: 6px;
+	margin: 0.5rem 0;
+	transition: background-color 0.3s ease;
+}
+
+	.collapsible:hover {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
+
+.content {
+	padding: 0 1rem;
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.4s ease;
+	font-size: 0.95rem;
+	color: #cfdfff;
+}
+
+.styled-input {
+	width: 95%;
+	max-width: 600px;
+	padding: 10px 14px;
+	margin: 10px 0;
+	border: none;
+	border-radius: 8px;
+	background-color: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	font-size: 1rem;
+	outline: none;
+	transition: background-color 0.3s ease;
+}
+
+	.styled-input:focus {
+		background-color: rgba(255, 255, 255, 0.15);
+	}
