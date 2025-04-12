@@ -29,7 +29,8 @@ bool isValid(int x, int y, int n) {
 
 int main() {
     cout << "Content-Type: text/html\n\n";
-    cout << "<pre style='color: #0f0; font-size: 1rem;'>";
+    cout << "<style>body{color:#0f0;font-family:monospace;font-size:1rem;}</style>";
+    cout << "<pre>";
 
     string content;
     char* lenStr = getenv("CONTENT_LENGTH");
@@ -43,7 +44,7 @@ int main() {
         gridData = content.substr(pos + 9);
 
     if (gridData.length() != 100) {
-        cout << "Invalid grid data.\n";
+        cout << "Invalid grid data.\n</pre>";
         return 0;
     }
 
@@ -61,7 +62,7 @@ int main() {
     }
 
     if (sx == -1 || ex == -1) {
-        cout << "Start or End not set.\n";
+        cout << "Start or End not set.\n</pre>";
         return 0;
     }
 
@@ -93,25 +94,29 @@ int main() {
         }
     }
 
-    if (endNode) {
-        Node* path = endNode->parent;
-        while (path && !(path->x == sx && path->y == sy)) {
-            grid[path->x][path->y] = '*';
-            path = path->parent;
-        }
-    }
-
+    // Print base grid
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             char c = grid[i][j];
             if (c == '.') cout << ". ";
             else if (c == 'W') cout << "# ";
-            else if (c == '*') cout << "• ";
             else cout << c << ' ';
         }
         cout << '\n';
     }
-
     cout << "</pre>";
+
+    // Output path as coordinates in hidden div
+    cout << "<div id='path-output' style='display:none;'>";
+
+    if (endNode) {
+        Node* path = endNode->parent;
+        while (path && !(path->x == sx && path->y == sy)) {
+            cout << (path->x * N + path->y) << ",";
+            path = path->parent;
+        }
+    }
+
+    cout << "</div>";
     return 0;
 }
