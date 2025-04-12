@@ -14,6 +14,10 @@
             border-radius: 12px;
             padding: 1rem;
         }
+
+        #export-btn {
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -33,43 +37,79 @@
             <input type="submit" value="Run Comparison" class="action-button" />
         </form>
 
-        <iframe name="result-frame" id="result-frame" onload="updateChart()"
-                style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"></iframe>
+        <iframe name="result-frame" id="result-frame" onload="updateChart()" style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"></iframe>
 
         <canvas id="chart"></canvas>
+
+        <button class="action-button" id="export-btn" onclick="exportCSV()">Export CSV</button>
 
         <a href="matrix.html" class="action-button" style="margin-top: 2rem;">← Back</a>
     </div>
 
     <script>
+        let runtimeChart;
+
         function updateChart() {
             const iframe = document.getElementById("result-frame");
             const doc = iframe.contentDocument || iframe.contentWindow.document;
             const chartData = doc.getElementById("chart-data");
             if (!chartData) return;
 
-            const labels = ["Standard", "Strassen", "Winograd"];
-            const data = [
-                parseFloat(chartData.dataset.standard),
-                parseFloat(chartData.dataset.strassen),
-                parseFloat(chartData.dataset.winograd)
-            ];
+            const size = parseInt(chartData.dataset.size);
+            const entry = {
+                size: size,
+                standard: parseFloat(chartData.dataset.standard),
+                strassen: parseFloat(chartData.dataset.strassen),
+                winograd: parseFloat(chartData.dataset.winograd)
+            };
 
-            const size = chartData.dataset.size;
+            let history = JSON.parse(localStorage.getItem("runtimeHistory") || "[]");
+
+            // Remove duplicate entries for the same size
+            history = history.filter(h => h.size !== entry.size);
+            history.push(entry);
+            history.sort((a, b) => a.size - b.size);
+            localStorage.setItem("runtimeHistory", JSON.stringify(history));
+
+            renderChart(history);
+        }
+
+        function renderChart(history) {
+            const labels = history.map(h => h.size);
+            const standardData = history.map(h => h.standard);
+            const strassenData = history.map(h => h.strassen);
+            const winogradData = history.map(h => h.winograd);
 
             const ctx = document.getElementById("chart").getContext("2d");
-            if (window.runtimeChart) window.runtimeChart.destroy();
+            if (runtimeChart) runtimeChart.destroy();
 
-            window.runtimeChart = new Chart(ctx, {
-                type: "bar",
+            runtimeChart = new Chart(ctx, {
+                type: "line",
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: `Execution Time (s) for ${size}×${size}`,
-                        data: data,
-                        backgroundColor: ["#29b6f6", "#66bb6a", "#ffa726"],
-                        borderRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: "Standard",
+                            data: standardData,
+                            borderColor: "#29b6f6",
+                            backgroundColor: "transparent",
+                            tension: 0.2
+                        },
+                        {
+                            label: "Strassen",
+                            data: strassenData,
+                            borderColor: "#66bb6a",
+                            backgroundColor: "transparent",
+                            tension: 0.2
+                        },
+                        {
+                            label: "Winograd",
+                            data: winogradData,
+                            borderColor: "#ffa726",
+                            backgroundColor: "transparent",
+                            tension: 0.2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -82,7 +122,14 @@
                     },
                     scales: {
                         x: {
-                            ticks: { color: "#cfdfff" }
+                            title: {
+                                display: true,
+                                text: "Matrix Size",
+                                color: "#cfdfff"
+                            },
+                            ticks: {
+                                color: "#cfdfff"
+                            }
                         },
                         y: {
                             beginAtZero: true,
@@ -91,7 +138,9 @@
                                 text: "Time (s)",
                                 color: "#cfdfff"
                             },
-                            ticks: { color: "#cfdfff" },
+                            ticks: {
+                                color: "#cfdfff"
+                            },
                             grid: {
                                 color: "rgba(255, 255, 255, 0.05)"
                             }
@@ -100,6 +149,29 @@
                 }
             });
         }
+
+        function exportCSV() {
+            const history = JSON.parse(localStorage.getItem("runtimeHistory") || "[]");
+            if (history.length === 0) return;
+
+            let csv = "Size,Standard,Strassen,Winograd\n";
+            history.forEach(entry => {
+                csv += `${entry.size},${entry.standard},${entry.strassen},${entry.winograd}\n`;
+            });
+
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "matrix_runtime_data.csv";
+            link.click();
+        }
+
+        // Render on first load if data exists
+        window.onload = () => {
+            const history = JSON.parse(localStorage.getItem("runtimeHistory") || "[]");
+            if (history.length) renderChart(history);
+        };
     </script>
 </body>
 </html>
