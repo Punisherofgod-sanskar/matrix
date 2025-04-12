@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pathfinding Game</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-template-rows: repeat(10, 30px);
+            gap: 2px;
+            margin: 1rem auto;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #111;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+
+        .start { background-color: #4caf50 !important; }
+        .end { background-color: #f44336 !important; }
+        .wall { background-color: #888 !important; }
+    </style>
+</head>
+<body>
+    <div class="overlay fade-in">
+        <h1>Pathfinding Grid</h1>
+        <p>Click to set Start, End, and Walls. Submit to run A* pathfinding.</p>
+
+        <form action="/cgi-bin/pathfinder.cgi" method="POST" onsubmit="prepareData()" target="result-frame">
+            <div class="grid" id="grid"></div>
+            <input type="hidden" name="gridData" id="gridData" />
+            <input type="submit" value="Run A*" class="action-button" />
+        </form>
+
+        <iframe name="result-frame" style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"></iframe>
+
+        <a href="index.html" class="action-button">← Back</a>
+    </div>
+
+    <script>
+        const grid = document.getElementById("grid");
+        const gridSize = 10;
+        let cells = [];
+        let startSet = false, endSet = false;
+
+        for (let i = 0; i < gridSize * gridSize; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.dataset.index = i;
+
+            cell.addEventListener("click", () => {
+                if (!startSet) {
+                    cell.classList.add("start");
+                    cell.dataset.state = "S";
+                    startSet = true;
+                } else if (!endSet && !cell.classList.contains("start")) {
+                    cell.classList.add("end");
+                    cell.dataset.state = "E";
+                    endSet = true;
+                } else if (!cell.classList.contains("start") && !cell.classList.contains("end")) {
+                    cell.classList.toggle("wall");
+                    cell.dataset.state = cell.classList.contains("wall") ? "W" : "";
+                }
+            });
+
+            grid.appendChild(cell);
+            cells.push(cell);
+        }
+
+        function prepareData() {
+            const data = cells.map(cell => cell.dataset.state || ".").join("");
+            document.getElementById("gridData").value = data;
+        }
+    </script>
+</body>
+</html>
