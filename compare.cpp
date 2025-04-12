@@ -8,12 +8,10 @@
 using namespace std;
 using namespace chrono;
 
-// 1D index for square matrix
 int idx(int i, int j, int n) {
     return i * n + j;
 }
 
-// Generate random matrix
 vector<int> generateMatrix(int n) {
     vector<int> mat(n * n);
     for (int i = 0; i < n * n; ++i)
@@ -21,7 +19,6 @@ vector<int> generateMatrix(int n) {
     return mat;
 }
 
-// Add two matrices
 vector<int> add(const vector<int>& A, const vector<int>& B, int n) {
     vector<int> C(n * n);
     for (int i = 0; i < n * n; ++i)
@@ -29,7 +26,6 @@ vector<int> add(const vector<int>& A, const vector<int>& B, int n) {
     return C;
 }
 
-// Subtract two matrices
 vector<int> subtract(const vector<int>& A, const vector<int>& B, int n) {
     vector<int> C(n * n);
     for (int i = 0; i < n * n; ++i)
@@ -37,8 +33,18 @@ vector<int> subtract(const vector<int>& A, const vector<int>& B, int n) {
     return C;
 }
 
-// Strassen using 1D vectors
-vector<int> strassen(const vector<int>& A, const vector<int>& B, int n) {
+vector<int> standardMultiply(const vector<int>& A, const vector<int>& B, int n) {
+    vector<int> C(n * n, 0);
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j)
+            for (int k = 0; k < n; ++k)
+                C[idx(i, j, n)] += A[idx(i, k, n)] * B[idx(k, j, n)];
+    return C;
+}
+
+vector<int> strassen(const vector<int>& A, const vector<int>& B, int n);
+
+vector<int> winogradStrassen(const vector<int>& A, const vector<int>& B, int n) {
     if (n == 1)
         return { A[0] * B[0] };
 
@@ -63,18 +69,29 @@ vector<int> strassen(const vector<int>& A, const vector<int>& B, int n) {
         }
     }
 
-    auto M1 = strassen(add(A11, A22, newSize), add(B11, B22, newSize), newSize);
-    auto M2 = strassen(add(A21, A22, newSize), B11, newSize);
-    auto M3 = strassen(A11, subtract(B12, B22, newSize), newSize);
-    auto M4 = strassen(A22, subtract(B21, B11, newSize), newSize);
-    auto M5 = strassen(add(A11, A12, newSize), B22, newSize);
-    auto M6 = strassen(subtract(A21, A11, newSize), add(B11, B12, newSize), newSize);
-    auto M7 = strassen(subtract(A12, A22, newSize), add(B21, B22, newSize), newSize);
+    auto S1 = subtract(B12, B22, newSize);
+    auto S2 = add(A11, A12, newSize);
+    auto S3 = add(A21, A22, newSize);
+    auto S4 = subtract(B21, B11, newSize);
+    auto S5 = add(A11, A22, newSize);
+    auto S6 = add(B11, B22, newSize);
+    auto S7 = subtract(A12, A22, newSize);
+    auto S8 = add(B21, B22, newSize);
+    auto S9 = subtract(A11, A21, newSize);
+    auto S10 = add(B11, B12, newSize);
 
-    auto C11 = add(subtract(add(M1, M4, newSize), M5, newSize), M7, newSize);
-    auto C12 = add(M3, M5, newSize);
-    auto C21 = add(M2, M4, newSize);
-    auto C22 = add(subtract(add(M1, M3, newSize), M2, newSize), M6, newSize);
+    auto P1 = strassen(A11, S1, newSize);
+    auto P2 = strassen(S2, B22, newSize);
+    auto P3 = strassen(S3, B11, newSize);
+    auto P4 = strassen(A22, S4, newSize);
+    auto P5 = strassen(S5, S6, newSize);
+    auto P6 = strassen(S7, S8, newSize);
+    auto P7 = strassen(S9, S10, newSize);
+
+    auto C11 = add(subtract(add(P5, P4, newSize), P2, newSize), P6, newSize);
+    auto C12 = add(P1, P2, newSize);
+    auto C21 = add(P3, P4, newSize);
+    auto C22 = subtract(subtract(add(P5, P1, newSize), P3, newSize), P7, newSize);
 
     vector<int> C(n * n);
     for (int i = 0; i < newSize; ++i) {
@@ -89,17 +106,11 @@ vector<int> strassen(const vector<int>& A, const vector<int>& B, int n) {
     return C;
 }
 
-// Standard matrix multiplication
-vector<int> standardMultiply(const vector<int>& A, const vector<int>& B, int n) {
-    vector<int> C(n * n, 0);
-    for (int i = 0; i < n; ++i)
-        for (int j = 0; j < n; ++j)
-            for (int k = 0; k < n; ++k)
-                C[idx(i, j, n)] += A[idx(i, k, n)] * B[idx(k, j, n)];
-    return C;
+vector<int> strassen(const vector<int>& A, const vector<int>& B, int n) {
+    if (n <= 64) return standardMultiply(A, B, n); // base case
+    return winogradStrassen(A, B, n);
 }
 
-// Format time
 string formatTime(double seconds) {
     ostringstream out;
     out << fixed << setprecision(3);
@@ -139,12 +150,18 @@ int main() {
     auto C2 = strassen(A, B, n);
     auto t4 = high_resolution_clock::now();
 
+    auto t5 = high_resolution_clock::now();
+    auto C3 = winogradStrassen(A, B, n);
+    auto t6 = high_resolution_clock::now();
+
     duration<double> time1 = t2 - t1;
     duration<double> time2 = t4 - t3;
+    duration<double> time3 = t6 - t5;
 
     cout << "Matrix Size: " << n << " × " << n << "\n\n";
     cout << "Standard Algorithm Time: " << formatTime(time1.count()) << "\n";
     cout << "Strassen's Algorithm Time: " << formatTime(time2.count()) << "\n";
+    cout << "Winograd's Variant Time: " << formatTime(time3.count()) << "\n";
 
     cout << "</pre>";
     return 0;
