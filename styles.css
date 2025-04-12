@@ -54,13 +54,17 @@ p {
 	font-weight: 500;
 	font-size: 1rem;
 	text-decoration: none;
-	transition: background 0.3s ease;
+	transition: all 0.3s ease;
+	transform: scale(1);
 }
 
 	.action-button:hover {
 		background: #1a4f9c;
+		color: #f1fafd;
+		transform: scale(0.94);
 		cursor: pointer;
 	}
+
 
 /* Hyperlink reset */
 a {
@@ -122,3 +126,24 @@ a {
     background-color: #ffffff;
     border: 1px solid #66ccff;
 }
+
+/* Matrix-themed scrollbar for Brave/Chrome/Edge */
+::-webkit-scrollbar {
+	width: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(0, 3, 31, 1); /* dark translucent */
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(0, 12, 55, 1);
+	border-radius: 8px;
+	box-shadow: 0 0 0px #66ccff;
+}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(to bottom, #4fa8e1, #124ea1);
+		box-shadow: 0 0 0px #66ccff;
+	}
+

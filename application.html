@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Applications</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="overlay fade-in">
+        <h1>Mathematical Application of Matrices</h1>
+
+        <button class="collapsible">LU decomposition</button>
+        <div class="content">
+            <p>
+                LU decomposition breaks down a square matrix into the product of two triangular matrices:
+                a lower triangular matrix (L) and an upper triangular matrix (U). This decomposition is used
+                to solve systems of linear equations, calculate matrix inverses, and find determinants.
+            </p>
+            <br>
+            <br>
+            <a href="lu_decomposition.html" class="action-button">View LU Decomposition</a>
+            <br>
+            <br>
+        </div>
+
+        <button class="collapsible">EigenValue Decomposition</button>
+        <div class="content">
+            <p>
+                Eigenvalue decomposition is a process that breaks down a square matrix into its constituent eigenvalues
+                and eigenvectors, essentially representing it in terms of its core components. This decomposition is widely
+                used across various fields like machine learning, physics, and data science. It's particularly valuable in
+                tasks like dimensionality reduction, where it helps identify the most important features or directions in a
+                dataset.
+            </p>
+            <br>
+            <br>
+            <a href="eigenvalue_decomposition.html" class="action-button">View EigenValue Decomposition</a>
+            <br>
+            <br>
+        </div>
+
+        <button class="collapsible">QR Decomposition</button>
+        <div class="content">
+            <p>
+                QR decomposition breaks down a matrix into two simpler matrices: an orthogonal matrix (Q) and
+                an upper triangular matrix (R). This technique is used in various applications, including solving
+                linear systems of equations, finding eigenvalues and eigenvectors of a matrix, and solving least
+                squares problems.
+            </p>
+            <br>
+            <br>
+            <a href="qr_decomposition.html" class="action-button">View QR Decomposition</a>
+            <br>
+            <br>
+        </div>
+
+        <button class="collapsible">Cholesky decomposition</button>
+        <div class="content">
+            <p>
+                Cholesky decomposition is a method in linear algebra that breaks down a positive-definite Hermitian
+                matrix into the product of a lower triangular matrix and its conjugate transpose. This process is
+                computationally efficient, particularly for solving systems of linear equations and in applications
+                involving kernel inversion. It's often used in statistics, machine learning, and other fields where working
+                with covariance matrices or similar structures is common.
+            </p>
+            <br>
+            <br>
+            <a href="cholesky_decomposition.html" class="action-button">View Cholesky Decomposition</a>
+            <br>
+            <br>
+        </div>
+
+        <a href="index.html" class="action-button">Back</a>
+    </div>
+
+    <script>
+        const collapsibles = document.querySelectorAll(".collapsible");
+        collapsibles.forEach(btn => {
+            btn.addEventListener("click", function () {
+                this.classList.toggle("active");
+                const content = this.nextElementSibling;
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
