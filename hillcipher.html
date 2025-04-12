@@ -5,26 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hill Cipher</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #222;
+            color: #0f0;
+            border: 1px solid #444;
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
     <div class="overlay fade-in">
         <h1>Hill Cipher</h1>
 
-        <form action="/cgi-bin/hillcipher.cgi" method="post">
-            <input type="text" name="text" class="styled-input" placeholder="Enter message (only letters)" required />
+        <form id="hillForm">
+            <!-- Message input -->
+            <input type="text"
+                   name="message"
+                   class="styled-input"
+                   placeholder="Enter message (only letters)"
+                   required />
 
-            <input type="text" name="matrix" class="styled-input" placeholder="Matrix row-wise (e.g., 3 3 2 5)" required />
+            <!-- Matrix input -->
+            <input type="text"
+                   name="matrix"
+                   class="styled-input"
+                   placeholder="Matrix row-wise (e.g., 3,3;2,5)"
+                   required />
 
-            <input type="text" name="size" class="styled-input" placeholder="Matrix size (e.g., 2 or 3)" required />
+            <!-- Hidden mode input -->
+            <input type="hidden" name="mode" id="modeInput" value="" />
 
+            <!-- Encrypt / Decrypt buttons -->
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <input type="submit" name="action" value="Encrypt" class="action-button" />
-                <input type="submit" name="action" value="Decrypt" class="action-button" />
+                <button type="button" class="action-button" onclick="submitWithMode('encrypt')">Encrypt</button>
+                <button type="button" class="action-button" onclick="submitWithMode('decrypt')">Decrypt</button>
             </div>
         </form>
+
+        <!-- Result output -->
+        <div id="result" class="result-box"></div>
 
         <br />
         <a href="index.html" class="action-button">Back</a>
     </div>
+
+    <script>
+        function submitWithMode(mode) {
+            const form = document.getElementById('hillForm');
+            const formData = new FormData(form);
+            formData.set("mode", mode); // set mode field
+
+            fetch("/cgi-bin/hillcipher.cgi", {
+                method: "POST",
+                body: new URLSearchParams(formData),
+            })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("result").textContent = data;
+                })
+                .catch(error => {
+                    document.getElementById("result").textContent = "Error: " + error;
+                });
+        }
+    </script>
 </body>
 </html>
