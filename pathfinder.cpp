@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <cstdlib>
+#include <algorithm>
 
 using namespace std;
 
@@ -13,10 +14,11 @@ struct Node {
     int f() const { return g + h; }
 };
 
-struct Compare {
-    bool operator()(Node* a, Node* b) {
-        return a->f() > b->f();
-    }
+struct CompareAStar {
+    bool operator()(Node* a, Node* b) { return a->f() > b->f(); }
+};
+struct CompareDijkstra {
+    bool operator()(Node* a, Node* b) { return a->g > b->g; }
 };
 
 int heuristic(int x1, int y1, int x2, int y2) {
@@ -38,10 +40,13 @@ int main() {
     content.resize(len);
     cin.read(&content[0], len);
 
-    string gridData;
-    size_t pos = content.find("gridData=");
-    if (pos != string::npos)
-        gridData = content.substr(pos + 9);
+    string gridData, algo = "astar";
+    size_t gpos = content.find("gridData=");
+    size_t apos = content.find("&algo=");
+    if (gpos != string::npos)
+        gridData = content.substr(gpos + 9, apos - (gpos + 9));
+    if (apos != string::npos)
+        algo = content.substr(apos + 6);
 
     if (gridData.length() != 100) {
         cout << "Invalid grid data.\n</pre>";
@@ -66,35 +71,64 @@ int main() {
         return 0;
     }
 
-    priority_queue<Node*, vector<Node*>, Compare> open;
-    vector<vector<bool>> closed(N, vector<bool>(N, false));
-    Node* start = new Node{sx, sy, 0, heuristic(sx, sy, ex, ey), nullptr};
-    open.push(start);
-
-    Node* endNode = nullptr;
+    using NodePtr = Node*;
     vector<pair<int, int>> dirs = {{1,0},{-1,0},{0,1},{0,-1}};
+    vector<vector<bool>> closed(N, vector<bool>(N, false));
+    Node* endNode = nullptr;
 
-    while (!open.empty()) {
-        Node* current = open.top(); open.pop();
-        if (closed[current->x][current->y]) continue;
-        closed[current->x][current->y] = true;
+    if (algo == "astar") {
+        priority_queue<NodePtr, vector<NodePtr>, CompareAStar> open;
+        open.push(new Node{sx, sy, 0, heuristic(sx, sy, ex, ey), nullptr});
 
-        if (current->x == ex && current->y == ey) {
-            endNode = current;
-            break;
+        while (!open.empty()) {
+            Node* curr = open.top(); open.pop();
+            if (closed[curr->x][curr->y]) continue;
+            closed[curr->x][curr->y] = true;
+
+            if (curr->x == ex && curr->y == ey) { endNode = curr; break; }
+
+            for (auto [dx, dy] : dirs) {
+                int nx = curr->x + dx, ny = curr->y + dy;
+                if (!isValid(nx, ny, N) || grid[nx][ny] == 'W' || closed[nx][ny]) continue;
+                open.push(new Node{nx, ny, curr->g + 1, heuristic(nx, ny, ex, ey), curr});
+            }
         }
+    } else if (algo == "dijkstra") {
+        priority_queue<NodePtr, vector<NodePtr>, CompareDijkstra> open;
+        open.push(new Node{sx, sy, 0, 0, nullptr});
 
-        for (auto [dx, dy] : dirs) {
-            int nx = current->x + dx;
-            int ny = current->y + dy;
-            if (!isValid(nx, ny, N) || grid[nx][ny] == 'W' || closed[nx][ny]) continue;
+        while (!open.empty()) {
+            Node* curr = open.top(); open.pop();
+            if (closed[curr->x][curr->y]) continue;
+            closed[curr->x][curr->y] = true;
 
-            Node* neighbor = new Node{nx, ny, current->g + 1, heuristic(nx, ny, ex, ey), current};
-            open.push(neighbor);
+            if (curr->x == ex && curr->y == ey) { endNode = curr; break; }
+
+            for (auto [dx, dy] : dirs) {
+                int nx = curr->x + dx, ny = curr->y + dy;
+                if (!isValid(nx, ny, N) || grid[nx][ny] == 'W' || closed[nx][ny]) continue;
+                open.push(new Node{nx, ny, curr->g + 1, 0, curr});
+            }
+        }
+    } else if (algo == "bfs") {
+        queue<Node*> q;
+        q.push(new Node{sx, sy, 0, 0, nullptr});
+        closed[sx][sy] = true;
+
+        while (!q.empty()) {
+            Node* curr = q.front(); q.pop();
+            if (curr->x == ex && curr->y == ey) { endNode = curr; break; }
+
+            for (auto [dx, dy] : dirs) {
+                int nx = curr->x + dx, ny = curr->y + dy;
+                if (!isValid(nx, ny, N) || grid[nx][ny] == 'W' || closed[nx][ny]) continue;
+                closed[nx][ny] = true;
+                q.push(new Node{nx, ny, 0, 0, curr});
+            }
         }
     }
 
-    // Print base grid
+    // Print grid view
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             char c = grid[i][j];
@@ -106,17 +140,19 @@ int main() {
     }
     cout << "</pre>";
 
-    // Output path as coordinates in hidden div
+    // Output path for animation
     cout << "<div id='path-output' style='display:none;'>";
-
     if (endNode) {
-        Node* path = endNode->parent;
-        while (path && !(path->x == sx && path->y == sy)) {
-            cout << (path->x * N + path->y) << ",";
-            path = path->parent;
+        Node* p = endNode;
+        vector<int> path;
+        while (p && !(p->x == sx && p->y == sy)) {
+            path.push_back(p->x * N + p->y);
+            p = p->parent;
         }
+        reverse(path.begin(), path.end());
+        for (int id : path) cout << id << ",";
     }
-
     cout << "</div>";
+
     return 0;
 }

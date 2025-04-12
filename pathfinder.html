@@ -24,80 +24,139 @@
 
         .start { background-color: #4caf50 !important; }
         .end { background-color: #f44336 !important; }
-        .wall { background-color: #888 !important; }
+        .wall { background-color: #888 !important; animation: pulse 0.2s ease; }
         .path { background-color: #ffd700 !important; box-shadow: 0 0 4px #ffd700; }
+
+        @keyframes pulse {
+            0% { background-color: #fff; }
+            100% { background-color: #888; }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .controls > * {
+            margin-top: 0.5rem;
+        }
+
+        .slider-label {
+            color: #cfdfff;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <div class="overlay fade-in">
-        <h1>Pathfinding Grid</h1>
-        <p>Click to set Start, End, and Walls. Submit to run A* pathfinding.</p>
+<div class="overlay fade-in">
+    <h1>Pathfinding Grid</h1>
 
-        <form action="/cgi-bin/pathfinder.cgi" method="POST" onsubmit="prepareData()" target="result-frame">
-            <div class="grid" id="grid"></div>
-            <input type="hidden" name="gridData" id="gridData" />
-            <input type="submit" value="Run A*" class="action-button" />
-        </form>
+    <div class="controls">
+        <select id="toolSelector" class="styled-input">
+            <option value="wall">Draw Walls</option>
+            <option value="start">Set Start</option>
+            <option value="end">Set End</option>
+        </select>
 
-        <iframe name="result-frame" id="result-frame"
-                style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"
-                onload="highlightPath()"></iframe>
+        <select id="algoSelector" class="styled-input">
+            <option value="astar">A*</option>
+            <option value="bfs">BFS</option>
+            <option value="dijkstra">Dijkstra</option>
+        </select>
 
-        <a href="index.html" class="action-button">← Back</a>
+        <label class="slider-label">Speed:
+            <input type="range" id="speedSlider" min="10" max="500" value="100" />
+        </label>
     </div>
 
-    <script>
-        const grid = document.getElementById("grid");
-        const gridSize = 10;
-        let cells = [];
-        let startSet = false, endSet = false;
+    <form action="/cgi-bin/pathfinder.cgi" method="POST" onsubmit="prepareData()" target="result-frame">
+        <div class="grid" id="grid"></div>
+        <input type="hidden" name="gridData" id="gridData" />
+        <input type="hidden" name="algo" id="algoInput" />
+        <input type="submit" value="Run Pathfinding" class="action-button" />
+    </form>
 
-        for (let i = 0; i < gridSize * gridSize; i++) {
-            const cell = document.createElement("div");
-            cell.classList.add("cell");
-            cell.dataset.index = i;
+    <iframe name="result-frame" id="result-frame"
+            style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"
+            onload="highlightPath()"></iframe>
 
-            cell.addEventListener("click", () => {
-                if (!startSet) {
-                    cell.classList.add("start");
-                    cell.dataset.state = "S";
-                    startSet = true;
-                } else if (!endSet && !cell.classList.contains("start")) {
-                    cell.classList.add("end");
-                    cell.dataset.state = "E";
-                    endSet = true;
-                } else if (!cell.classList.contains("start") && !cell.classList.contains("end")) {
-                    cell.classList.toggle("wall");
-                    cell.dataset.state = cell.classList.contains("wall") ? "W" : "";
+    <a href="index.html" class="action-button">← Back</a>
+</div>
+
+<script>
+    const grid = document.getElementById("grid");
+    const gridSize = 10;
+    let cells = [];
+    let startIndex = -1, endIndex = -1;
+
+    const toolSelector = document.getElementById("toolSelector");
+
+    for (let i = 0; i < gridSize * gridSize; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+
+        cell.addEventListener("click", () => {
+            const tool = toolSelector.value;
+
+            if (tool === "start") {
+                if (startIndex !== -1) cells[startIndex].classList.remove("start");
+                cell.classList.remove("end", "wall", "path");
+                cell.classList.add("start");
+                cell.dataset.state = "S";
+                startIndex = i;
+            } else if (tool === "end") {
+                if (endIndex !== -1) cells[endIndex].classList.remove("end");
+                cell.classList.remove("start", "wall", "path");
+                cell.classList.add("end");
+                cell.dataset.state = "E";
+                endIndex = i;
+            } else if (tool === "wall") {
+                cell.classList.remove("start", "end", "path");
+                if (!cell.classList.contains("wall")) {
+                    cell.classList.add("wall");
+                    cell.dataset.state = "W";
+                } else {
+                    cell.classList.remove("wall");
+                    cell.dataset.state = "";
                 }
-            });
+            }
+        });
 
-            grid.appendChild(cell);
-            cells.push(cell);
-        }
+        grid.appendChild(cell);
+        cells.push(cell);
+    }
 
-        function prepareData() {
-            cells.forEach(cell => cell.classList.remove("path"));
-            const data = cells.map(cell => cell.dataset.state || ".").join("");
-            document.getElementById("gridData").value = data;
-        }
+    function prepareData() {
+        cells.forEach(cell => cell.classList.remove("path"));
+        const data = cells.map(cell => cell.dataset.state || ".").join("");
+        document.getElementById("gridData").value = data;
+        document.getElementById("algoInput").value = document.getElementById("algoSelector").value;
+    }
 
-        function highlightPath() {
-            const iframe = document.getElementById("result-frame");
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            const pathDiv = doc.getElementById("path-output");
-            if (!pathDiv) return;
+    async function highlightPath() {
+        const iframe = document.getElementById("result-frame");
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const pathDiv = doc.getElementById("path-output");
+        if (!pathDiv) return;
 
-            const pathData = pathDiv.textContent.trim().split(",");
-            pathData.forEach(id => {
-                if (id !== "") {
-                    const cell = cells[parseInt(id)];
-                    if (cell && !cell.classList.contains("start") && !cell.classList.contains("end")) {
-                        cell.classList.add("path");
-                    }
+        const speed = parseInt(document.getElementById("speedSlider").value);
+        const pathData = pathDiv.textContent.trim().split(",");
+
+        for (let i = 0; i < pathData.length; i++) {
+            const id = parseInt(pathData[i]);
+            if (!isNaN(id)) {
+                const cell = cells[id];
+                if (cell && !cell.classList.contains("start") && !cell.classList.contains("end")) {
+                    cell.classList.add("path");
+                    await new Promise(res => setTimeout(res, speed));
                 }
-            });
+            }
         }
-    </script>
+    }
+</script>
 </body>
 </html>

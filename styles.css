@@ -103,19 +103,22 @@ a {
 }
 
 .styled-input {
-	width: 95%;
-	max-width: 600px;
-	padding: 10px 14px;
-	margin: 10px 0;
-	border: none;
-	border-radius: 8px;
-	background-color: rgba(255, 255, 255, 0.1);
-	color: #fff;
-	font-size: 1rem;
-	outline: none;
-	transition: background-color 0.3s ease;
+    width: 95%;
+    max-width: 600px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background-color: #f0f0f0;  /* light background */
+    color: #111;                /* black text */
+    font-size: 1rem;
+    outline: none;
+    transition: background-color 0.3s ease;
+    appearance: none;           /* removes default arrow style (optional) */
 }
 
-	.styled-input:focus {
-		background-color: rgba(255, 255, 255, 0.15);
-	}
+.styled-input:focus,
+.styled-input:hover {
+    background-color: #ffffff;
+    border: 1px solid #66ccff;
+}
