@@ -5,93 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Compare Matrix Algorithms</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .compare-container {
-            max-width: 600px;
-            margin: 6rem auto 2rem;
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
-            text-align: center;
-        }
-
-        .compare-container h1 {
-            color: #00ffe1;
-            margin-bottom: 1.5rem;
-            font-size: 2rem;
-        }
-
-        form {
-            margin-bottom: 2rem;
-        }
-
-        input[type="number"] {
-            padding: 0.5rem;
-            font-size: 1rem;
-            border-radius: 6px;
-            border: none;
-            width: 120px;
-            margin-top: 0.5rem;
-        }
-
-        input[type="submit"] {
-            padding: 0.6rem 1.4rem;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            background-color: #008c7a;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 1rem;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #00776a;
-            text-decoration: none;
-        }
-
-        iframe {
-            width: 100%;
-            height: 320px;
-            background-color: #111;
+        #chart {
+            margin-top: 2rem;
+            background-color: rgba(255, 255, 255, 0.03);
             border: 1px solid #333;
-            border-radius: 8px;
-            color: white;
-        }
-
-        a.action-button {
-            display: inline-block;
-            margin-top: 1.5rem;
-            background-color: #006b5e;
-            color: white;
-            padding: 0.5rem 1.2rem;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
-        }
-
-        a.action-button:hover {
-            background-color: #00594f;
-            text-decoration: none;
+            border-radius: 12px;
+            padding: 1rem;
         }
     </style>
 </head>
 <body>
     <div class="overlay fade-in">
-        <div class="compare-container">
-            <h1>Compare Algorithms</h1>
-            <form action="/cgi-bin/compare.cgi" method="POST" target="result-frame">
-                <label for="size">Matrix Size (n × n):</label><br>
-                <input type="number" name="size" id="size" min="1" required /><br>
-                <input type="submit" value="Run Comparison" />
-            </form>
+        <h1>Algorithm Comparison</h1>
+        <p>Compare execution times of different matrix multiplication algorithms.</p>
 
-            <iframe name="result-frame"></iframe>
+        <form action="/cgi-bin/compare.cgi" method="POST" target="result-frame" style="text-align: center;">
+            <input type="number"
+                   name="size"
+                   id="size"
+                   class="styled-input"
+                   placeholder="Matrix size (power of 2)"
+                   min="1"
+                   required />
+            <br />
+            <input type="submit" value="Run Comparison" class="action-button" />
+        </form>
 
-            <a href="matrix.html" class="action-button">← Back</a>
-        </div>
+        <iframe name="result-frame" id="result-frame" onload="updateChart()"
+                style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"></iframe>
+
+        <canvas id="chart"></canvas>
+
+        <a href="matrix.html" class="action-button" style="margin-top: 2rem;">← Back</a>
     </div>
+
+    <script>
+        function updateChart() {
+            const iframe = document.getElementById("result-frame");
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            const chartData = doc.getElementById("chart-data");
+            if (!chartData) return;
+
+            const labels = ["Standard", "Strassen", "Winograd"];
+            const data = [
+                parseFloat(chartData.dataset.standard),
+                parseFloat(chartData.dataset.strassen),
+                parseFloat(chartData.dataset.winograd)
+            ];
+
+            const size = chartData.dataset.size;
+
+            const ctx = document.getElementById("chart").getContext("2d");
+            if (window.runtimeChart) window.runtimeChart.destroy();
+
+            window.runtimeChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Execution Time (s) for ${size}×${size}`,
+                        data: data,
+                        backgroundColor: ["#29b6f6", "#66bb6a", "#ffa726"],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: "#cfdfff"
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: "#cfdfff" }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Time (s)",
+                                color: "#cfdfff"
+                            },
+                            ticks: { color: "#cfdfff" },
+                            grid: {
+                                color: "rgba(255, 255, 255, 0.05)"
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

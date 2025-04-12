@@ -107,7 +107,7 @@ vector<int> winogradStrassen(const vector<int>& A, const vector<int>& B, int n) 
 }
 
 vector<int> strassen(const vector<int>& A, const vector<int>& B, int n) {
-    if (n <= 64) return standardMultiply(A, B, n); // base case
+    if (n <= 64) return standardMultiply(A, B, n);
     return winogradStrassen(A, B, n);
 }
 
@@ -135,7 +135,7 @@ int main() {
         n = stoi(data.substr(pos + 1));
 
     if (n <= 0 || (n & (n - 1)) != 0) {
-        cout << "Please enter a power-of-two matrix size (e.g., 2, 4, 8, 16...)";
+        cout << "Please enter a power-of-two matrix size (e.g., 2, 4, 8, 16...)</pre>";
         return 0;
     }
 
@@ -162,7 +162,14 @@ int main() {
     cout << "Standard Algorithm Time: " << formatTime(time1.count()) << "\n";
     cout << "Strassen's Algorithm Time: " << formatTime(time2.count()) << "\n";
     cout << "Winograd's Variant Time: " << formatTime(time3.count()) << "\n";
-
     cout << "</pre>";
+
+    // Hidden JSON block
+    cout << "<div id='chart-data' style='display:none;' ";
+    cout << "data-size='" << n << "' ";
+    cout << "data-standard='" << time1.count() << "' ";
+    cout << "data-strassen='" << time2.count() << "' ";
+    cout << "data-winograd='" << time3.count() << "'></div>";
+
     return 0;
 }
