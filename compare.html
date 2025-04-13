@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Compare Matrix Algorithms</title>
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         #chart {
             margin-top: 2rem;
@@ -15,9 +15,18 @@
             padding: 1rem;
         }
 
-        #export-btn {
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-top: 1rem;
+            color: #cfdfff;
         }
+
+            .toggle-container label {
+                margin-left: 0.5rem;
+                font-size: 0.95rem;
+            }
     </style>
 </head>
 <body>
@@ -26,23 +35,22 @@
         <p>Compare execution times of different matrix multiplication algorithms.</p>
 
         <form action="/cgi-bin/compare.cgi" method="POST" target="result-frame" style="text-align: center;">
-            <input type="number"
-                   name="size"
-                   id="size"
-                   class="styled-input"
-                   placeholder="Matrix size (power of 2)"
-                   min="1"
-                   required />
+            <input type="number" name="size" id="size" class="styled-input"
+                   placeholder="Matrix size (power of 2)" min="1" required />
             <br />
             <input type="submit" value="Run Comparison" class="action-button" />
         </form>
 
         <iframe name="result-frame" id="result-frame" onload="updateChart()" style="width: 100%; height: 300px; background-color: #111; border: 1px solid #333; border-radius: 8px; margin-top: 1.5rem;"></iframe>
 
+        <div class="toggle-container">
+            <input type="checkbox" id="logToggle" onchange="updateChart()" />
+            <label for="logToggle">Use Logarithmic Scale (Y-axis)</label>
+        </div>
+
         <canvas id="chart"></canvas>
 
-        <button class="action-button" id="export-btn" onclick="exportCSV()">Export CSV</button>
-
+        <button class="action-button" onclick="exportCSV()">Export CSV</button>
         <a href="matrix.html" class="action-button" style="margin-top: 2rem;">← Back</a>
     </div>
 
@@ -65,7 +73,6 @@
 
             let history = JSON.parse(localStorage.getItem("runtimeHistory") || "[]");
 
-            // Remove duplicate entries for the same size
             history = history.filter(h => h.size !== entry.size);
             history.push(entry);
             history.sort((a, b) => a.size - b.size);
@@ -81,7 +88,10 @@
             const winogradData = history.map(h => h.winograd);
 
             const ctx = document.getElementById("chart").getContext("2d");
+
             if (runtimeChart) runtimeChart.destroy();
+
+            const useLog = document.getElementById("logToggle").checked;
 
             runtimeChart = new Chart(ctx, {
                 type: "line",
@@ -93,21 +103,21 @@
                             data: standardData,
                             borderColor: "#29b6f6",
                             backgroundColor: "transparent",
-                            tension: 0.2
+                            tension: 0.3
                         },
                         {
                             label: "Strassen",
                             data: strassenData,
                             borderColor: "#66bb6a",
                             backgroundColor: "transparent",
-                            tension: 0.2
+                            tension: 0.3
                         },
                         {
                             label: "Winograd",
                             data: winogradData,
                             borderColor: "#ffa726",
                             backgroundColor: "transparent",
-                            tension: 0.2
+                            tension: 0.3
                         }
                     ]
                 },
@@ -124,7 +134,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: "Matrix Size",
+                                text: "Matrix Size (n × n)",
                                 color: "#cfdfff"
                             },
                             ticks: {
@@ -132,14 +142,17 @@
                             }
                         },
                         y: {
-                            beginAtZero: true,
+                            type: useLog ? "logarithmic" : "linear",
                             title: {
                                 display: true,
-                                text: "Time (s)",
+                                text: useLog ? "Execution Time (s, log scale)" : "Execution Time (s)",
                                 color: "#cfdfff"
                             },
                             ticks: {
-                                color: "#cfdfff"
+                                color: "#cfdfff",
+                                callback: function (value) {
+                                    return useLog ? Number(value).toExponential(1) : value.toFixed(3);
+                                }
                             },
                             grid: {
                                 color: "rgba(255, 255, 255, 0.05)"
@@ -167,7 +180,6 @@
             link.click();
         }
 
-        // Render on first load if data exists
         window.onload = () => {
             const history = JSON.parse(localStorage.getItem("runtimeHistory") || "[]");
             if (history.length) renderChart(history);

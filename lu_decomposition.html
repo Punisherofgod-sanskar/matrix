@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LU Decomposition Solver</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: url('matrix-background.jpg') center/cover fixed no-repeat;
+            color: #e8f0ff;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        #matrixInputs {
+            display: grid;
+            gap: 5px;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .styled-input {
+            width: 50px;
+            text-align: center;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            font-size: 1rem;
+        }
+
+        .action-button {
+            background: #1565c0;
+            color: white;
+            padding: 0.6rem 1.4rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: background 0.3s ease;
+            margin-top: 1rem;
+        }
+
+            .action-button:hover {
+                background: #1a4f9c;
+                cursor: pointer;
+            }
+
+        iframe {
+            margin-top: 2rem;
+            width: 100%;
+            height: 400px;
+            border: none;
+            background-color: #fff;
+            border-radius: 8px;
+        }
+
+        .back-button {
+            text-align: center;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LU Decomposition Solver</h1>
+
+        <label for="matrixSize" style="color: #ffffff;">Matrix Size:</label>
+        <input type="number" id="matrixSize" class="styled-input" value="3" min="2" max="10" onchange="createMatrixInputs()">
+
+        <button onclick="generateRandomMatrix()" class="action-button">Generate Random Matrix</button>
+
+        <form action="/cgi-bin/lu_decomposition.cgi" method="POST" target="result-frame" onsubmit="prepareMatrix()">
+            <div id="matrixInputs"></div>
+            <input type="hidden" name="matrix" id="matrixData">
+            <button type="submit" class="action-button">Run LU Decomposition</button>
+        </form>
+
+        <iframe name="result-frame"></iframe>
+
+        <div class="back-button">
+            <a href="application.html" class="action-button">← Back to Applications</a>
+        </div>
+    </div>
+
+    <script>
+        function createMatrixInputs() {
+            const size = parseInt(document.getElementById("matrixSize").value);
+            const container = document.getElementById("matrixInputs");
+            container.innerHTML = "";
+            container.style.gridTemplateColumns = `repeat(${size}, 50px)`;
+
+            for (let i = 0; i < size * size; i++) {
+                const input = document.createElement("input");
+                input.type = "number";
+                input.className = "styled-input";
+                input.value = 0;
+                container.appendChild(input);
+            }
+        }
+
+        function generateRandomMatrix() {
+            const inputs = document.querySelectorAll("#matrixInputs input");
+            inputs.forEach(input => {
+                input.value = Math.floor(Math.random() * 9 + 1); // random 1–9
+            });
+        }
+
+        function prepareMatrix() {
+            const size = parseInt(document.getElementById("matrixSize").value);
+            const inputs = document.querySelectorAll("#matrixInputs input");
+            const rows = [];
+
+            for (let i = 0; i < size; i++) {
+                const row = [];
+                for (let j = 0; j < size; j++) {
+                    row.push(inputs[i * size + j].value);
+                }
+                rows.push(row.join(","));
+            }
+
+            document.getElementById("matrixData").value = rows.join(";");
+        }
+
+        window.onload = () => createMatrixInputs();
+    </script>
+</body>
+</html>
