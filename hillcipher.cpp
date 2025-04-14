@@ -1,4 +1,8 @@
-﻿#include <iostream>
+﻿// File: hillcipher.cpp
+// Purpose: Encrypt a message using the Hill cipher algorithm
+// Note: Only uppercase alphabetic characters supported; key matrix must be invertible mod 26
+
+#include <iostream>
 #include <sstream>
 #include <vector>
 #include <string>
@@ -8,8 +12,9 @@
 
 using namespace std;
 
-const int MOD = 26;
+const int MOD = 26; // Hill cipher works with mod 26 for the alphabet
 
+// Compute GCD of two integers
 int gcd(int a, int b) {
     while (b != 0) {
         int t = b;
@@ -19,6 +24,7 @@ int gcd(int a, int b) {
     return a;
 }
 
+// Compute modular inverse of a under mod using Extended Euclidean Algorithm
 int modInverse(int a, int mod) {
     int m0 = mod, t, q;
     int x0 = 0, x1 = 1;
@@ -34,6 +40,7 @@ int modInverse(int a, int mod) {
     return (x1 + m0) % m0;
 }
 
+// Recursive function to compute matrix determinant mod 'mod'
 int determinant(const vector<vector<int>>& mat, int mod) {
     int n = mat.size();
     if (n == 1) return mat[0][0] % mod;
@@ -54,6 +61,7 @@ int determinant(const vector<vector<int>>& mat, int mod) {
     return det;
 }
 
+// Compute the adjugate matrix of a given square matrix
 vector<vector<int>> adjugate(const vector<vector<int>>& mat, int mod) {
     int n = mat.size();
     vector<vector<int>> adj(n, vector<int>(n));
@@ -76,12 +84,13 @@ vector<vector<int>> adjugate(const vector<vector<int>>& mat, int mod) {
                 r++;
             }
             int sign = ((i + j) % 2 == 0) ? 1 : -1;
-            adj[j][i] = (mod + sign * determinant(submat, mod)) % mod;
+            adj[j][i] = (mod + sign * determinant(submat, mod)) % mod; // Note the transpose here
         }
     }
     return adj;
 }
 
+// Compute inverse of matrix mod 'mod' using adjugate and determinant
 vector<vector<int>> modInverseMatrix(const vector<vector<int>>& mat, int mod) {
     int det = determinant(mat, mod);
     int invDet = modInverse(det % mod, mod);
@@ -96,6 +105,7 @@ vector<vector<int>> modInverseMatrix(const vector<vector<int>>& mat, int mod) {
     return inv;
 }
 
+// Parse matrix from string (e.g., "6,24,1;13,16,10;20,17,15") into 2D vector
 vector<vector<int>> parseMatrix(const string& input) {
     vector<vector<int>> matrix;
     stringstream ss(input);
@@ -106,7 +116,7 @@ vector<vector<int>> parseMatrix(const string& input) {
         stringstream rs(row);
         string val;
         while (getline(rs, val, ',')) {
-            r.push_back(stoi(val) % MOD);
+            r.push_back(stoi(val) % MOD); // Apply mod 26 to each entry
         }
         matrix.push_back(r);
     }
@@ -128,6 +138,7 @@ vector<vector<int>> parseMatrix(const string& input) {
     return matrix;
 }
 
+// Clean input message: keep only alphabet letters and convert to uppercase
 string cleanMessage(const string& msg) {
     string cleaned;
     for (char c : msg)
@@ -135,34 +146,37 @@ string cleanMessage(const string& msg) {
     return cleaned;
 }
 
+// Encrypt message using Hill cipher
 string encrypt(const string& msg, const vector<vector<int>>& mat) {
     int n = mat.size();
     string cleaned = cleanMessage(msg);
     while (cleaned.size() % n != 0)
-        cleaned += 'X';
+        cleaned += 'X'; // Padding with 'X' if message length not divisible by matrix size
 
     string cipher;
     for (size_t i = 0; i < cleaned.size(); i += n) {
         vector<int> block(n);
         for (int j = 0; j < n; ++j)
-            block[j] = cleaned[i + j] - 'A';
+            block[j] = cleaned[i + j] - 'A'; // Convert to numerical index
 
         vector<int> result(n);
         for (int r = 0; r < n; ++r) {
             for (int c = 0; c < n; ++c)
                 result[r] = (result[r] + mat[r][c] * block[c]) % MOD;
-            cipher += (char)(result[r] + 'A');
+            cipher += (char)(result[r] + 'A'); // Convert back to character
         }
     }
     return cipher;
 }
 
+// Decrypt message using inverse of encryption matrix
 string decrypt(const string& msg, const vector<vector<int>>& mat) {
     int n = mat.size();
     vector<vector<int>> invMat = modInverseMatrix(mat, MOD);
-    return encrypt(msg, invMat);
+    return encrypt(msg, invMat); // Reuse encrypt function with inverse matrix
 }
 
+// Output result as plain text (used by CGI)
 void printHtmlResult(const string& result) {
     cout << "Content-Type: text/plain\n\n";
     cout << result << endl;
@@ -170,10 +184,10 @@ void printHtmlResult(const string& result) {
 
 int main() {
     string data;
-    char* contentLengthStr = getenv("CONTENT_LENGTH");
+    char* contentLengthStr = getenv("CONTENT_LENGTH"); // Get POST content length
     int contentLength = contentLengthStr ? stoi(contentLengthStr) : 0;
     data.resize(contentLength);
-    cin.read(&data[0], contentLength);
+    cin.read(&data[0], contentLength); // Read full request body
 
 
     stringstream ss(data);
@@ -183,24 +197,26 @@ int main() {
         if (eq == string::npos) continue;
         string key = pair.substr(0, eq);
         string val = pair.substr(eq + 1);
-        replace(val.begin(), val.end(), '+', ' ');
+        replace(val.begin(), val.end(), '+', ' '); // Decode form spaces
 
         if (key == "message") msg = val;
         else if (key == "matrix") matrixStr = val;
         else if (key == "mode") mode = val;
     }
 
+    // Validate required fields
     if (msg.empty() || matrixStr.empty() || mode.empty()) {
         printHtmlResult("Missing data.");
         return 1;
     }
 
-    vector<vector<int>> matrix = parseMatrix(matrixStr);
+    vector<vector<int>> matrix = parseMatrix(matrixStr); // Parse key matrix
     if (matrix.empty()) {
         printHtmlResult("Invalid or non-invertible matrix.");
         return 1;
     }
 
+    // Encrypt or decrypt based on mode
     string result = (mode == "encrypt") ? encrypt(msg, matrix) : decrypt(msg, matrix);
     printHtmlResult(result);
     return 0;
